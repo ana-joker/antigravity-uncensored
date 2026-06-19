@@ -1,0 +1,19 @@
+# Backups
+*.original
+*.bak
+
+# Runtime artifacts
+patch_report.json
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.vscode/
+.idea/

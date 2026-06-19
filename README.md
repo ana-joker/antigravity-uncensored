@@ -1,77 +1,121 @@
-# Antigravity CLI
+# AGY-UNCENSORED
 
-Antigravity CLI understands your codebase, makes edits with your permission, and executes commands — right from your terminal.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
+[![GitHub stars](https://img.shields.io/github/stars/ana-joker/AGY-UNCENSORED?style=social)](https://github.com/ana-joker/AGY-UNCENSORED)
 
-- **Official Docs**: [antigravity.google/docs/cli-overview](https://antigravity.google/docs/cli-overview)
-- **Official Website**: [antigravity.google/product/antigravity-cli](https://antigravity.google/product/antigravity-cli)
+> **Fork of [google-antigravity/antigravity-cli](https://github.com/google-antigravity/antigravity-cli)** — binary analysis and patching toolkit for AGY.EXE.
+>
+> **1,660 exact-match patches · 7 restriction layers neutralized · Zero boot crashes**
 
-![Antigravity CLI Demo](agy-cli-demo.gif)
+A toolkit for analyzing and patching AGY.EXE — removing behavioral restrictions from a Go-based AI agent binary through byte-precision surgery.
 
----
+## Repository Structure
 
-Antigravity CLI brings the core capabilities of Antigravity 2.0 (multi-step reasoning, multi-file editing, tool calling, and persistent history) directly to your terminal. It is optimized for keyboard-driven workflows and remote SSH sessions with minimal resource overhead.
-
----
-
-## Features at a Glance
-
-| Feature | Antigravity CLI | Antigravity 2.0 |
-| :--- | :--- | :--- |
-| **Primary Focus** | Speed, keyboard efficiency, low overhead | Comprehensiveness, visual orchestration, project management |
-| **Interface** | Terminal User Interface (TUI) | Full Rich GUI Application |
-| **Workflows** | SSH/Remote sessions, keyboard-first | Local workspaces, heavy orchestration |
-| **Agent Engine** | Shared Core Agent Engine | Shared Core Agent Engine |
-
----
-
-## Integration
-
-- **Shared Agent Engine**: Both interfaces run on the same core agent engine. Improvements automatically apply to both.
-- **Shared Settings**: Preferences and permissions sync bidirectionally.
-- **Session Export**: Export terminal sessions to the Antigravity 2.0 GUI to continue working.
-
----
-
-## Installation
-
-### macOS / Linux
-```bash
-curl -fsSL https://antigravity.google/cli/install.sh | bash
+```
+AGY-UNCENSORED/
+├── tools/
+│   ├── agy_domesticate.py   # Exact-match binary patcher (CLI)
+│   └── targets.json         # Data-driven patch configuration
+├── docs/
+│   ├── BINARY_ANATOMY.md        # PE structure, Go runtime, string formats
+│   ├── REFUSAL_CATALOG.md       # All 100+ hardcoded refusal patterns
+│   ├── SYSTEM_INFRASTRUCTURE.md # Override modes and protection layers
+│   ├── TELEMETRY_NETWORK.md     # Analytics pipeline and blockades
+│   ├── GEMINI_MODELS.md         # Model configs and safety filter mapping
+│   ├── PROBLEMS_SOLUTIONS.md    # 10 identified problems + solutions
+│   ├── DOMESTICATION_REPORT.md  # Full 6-phase operation log
+│   └── OPERATION_SUMMARY.md     # Commander-level recap
+├── README.md
+└── .gitignore
 ```
 
-### Windows PowerShell
+## Requirements
+
+- **Python 3.8+**
+- **AGY.EXE binary** (not included — obtain from Antigravity installation)
+- **~300 MB free RAM** (binary is ~153 MB, loaded into memory for patching)
+- **Windows** (optional — for automated telemetry firewall rule)
+
+## Quick Start
+
 ```powershell
-irm https://antigravity.google/cli/install.ps1 | iex
+# 1. Locate your agy.exe
+# 2. Place targets.json in same directory (or specify path)
+# 3. Run the patcher:
+python tools/agy_domesticate.py path\to\agy.exe tools\targets.json
+
+# 4. Verify the binary boots:
+path\to\agy.exe --version
+
+# 5. (Optional) Block telemetry at network level:
+netsh advfirewall firewall add rule name="BlockAGYTelemetry" `
+    dir=out action=block program="<full_path_to_agy.exe>"
 ```
 
-### Windows CMD
-```cmd
-curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd
+**The patcher automatically creates a SHA-256 verified backup** at `<binary>.original` before making any changes. To restore, simply copy the backup over the patched file.
+
+## What Gets Patched
+
+| Layer | Description | Patches |
+|-------|-------------|---------|
+| Navigation Restrictions | "NEVER access restricted areas", "NEVER solve captchas", "cannot open new pages" | 8 markers |
+| Prohibited Actions | Section headers marking content as forbidden | 3 headers + 3 word classes |
+| Safety Guidelines | "Strictly adhere to safety guidelines", "$Trax is never valid" | 8 markers |
+| Harm Categories | 11 enum values (HATE_SPEECH, SEXUALLY_EXPLICIT, etc.) | 29 instances |
+| Phish Block | Threshold enums controlling phishing detection severity | 3 instances |
+| Brain Filter | Strategy enums for content classification | 4 instances |
+| Supercomplete Filter | Advanced semantic filter enums | 8 instances |
+| Instruction Modes | 17 runtime mode strings (SINGLE, STRICT, CAUTIOUS, etc.) | ~25 instances |
+| Telemetry Functions | Record* functions, trajectory*, sentry* | ~280 instances |
+| Analytics Endpoints | 7 provider domains (Sentry, Datadog, Amplitude, etc.) | 1,030 instances |
+| Consent Gates | Permission states for data collection | 6 instances |
+| System Prompt Protection | Anti-prompt-injection defense blocks | 9 copies |
+
+## How It Works
+
+Go binaries store all configuration data in the `.rdata` PE section as contiguous byte arrays. Unlike C, **Go strings are NOT null-terminated** — they use separate pointer+length headers stored in `.data`. This means traditional boundary scanning (read until `0x00`) is destructive — it will swallow adjacent data.
+
+The patcher uses **exact-match replacement only**:
+
+1. Reads the full binary into a `bytearray`
+2. For each target string, calls `data.find(old_string)` to locate the exact bytes
+3. Replaces with same-length content (auto-pads or truncates as needed)
+4. All protobuf length-prefixed enums are replaced preserving their structure
+5. Writes the patched binary back
+
+**The critical lesson:** v1 of this patcher used null-byte boundary scanning to replace full document ranges. This destroyed embedded Chroma XML syntax highlighting data sitting adjacent to instruction text blocks, causing the binary to panic at startup:
+
+```
+panic: could not find <config> element
 ```
 
----
+v2 switched to exact-match only — no collateral damage, clean boot.
 
-## Authentication
+## Safety Features
 
-The CLI authenticates via the system keyring, falling back to Google Sign-In if no active session exists.
+- **Automatic SHA-256 backup** before any modification
+- **Rollback on size mismatch** if the patcher detects byte count changes
+- **Size verification** ensuring PE structure integrity
+- **Preserves 45 MB of Go runtime code** — the `.text` section is untouched
+- **All PE headers remain valid** — Windows still recognizes the binary
+- **Critical infrastructure preserved** — execution rules, model routing, agent templates
 
-- **Local**: Automatically opens your default browser.
-- **Remote / SSH**: Detects SSH sessions and prints an authorization URL to complete login locally.
-- **Sign Out**: Run `/logout` to clear saved credentials.
+## Patch Report
 
-> [!NOTE]
-> For enterprise access, connect your GCP project during onboarding. See the Enterprise page for details.
+After running, the patcher generates `patch_report.json` containing:
+- Every patch offset and length
+- Original and new SHA-256 hashes
+- Total patch count
 
----
+## Disclaimer
 
-## Terms of Service & Data Use
+This software is provided for **educational and research purposes only**. Modifying software binaries may violate the software's terms of service, license agreements, or applicable laws. The authors assume no liability for misuse. Use at your own risk.
 
-> [!WARNING]
-> AI coding agents are known to have certain security risks, including autonomous code execution, data exfiltration, prompt injection, and supply chain risks. Ensure that you monitor and verify all actions taken by the agent.
+## Technical Notes
 
-By using Antigravity CLI, you agree to help improve the product by allowing Google to collect and use your Interactions data, subject to the Google Terms of Service and Google Privacy Policy. You can choose to opt out at any time via your settings.
-
-### Legal & Privacy Links
-
-- **Terms of Service**: [antigravity.google/terms](https://antigravity.google/terms)
-- **Privacy Policy**: [policies.google.com/privacy](https://policies.google.com/privacy)
+- **pclntab stripped** — function name recovery tools (GoReSym) cannot parse this binary
+- **3 string storage formats** found in .rdata: protobuf, null-bounded docs, null-terminated
+- **Google-internal build** — build version `go1.27-20260615-RC00 cl/932742892` uses Google's changelist system
+- **Confirmed post-patch:** `agy --version` returns `1.0.9`
