@@ -1,22 +1,46 @@
-# AGY-UNCENSORED
+# antigravity-uncensored
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
-[![GitHub stars](https://img.shields.io/github/stars/ana-joker/AGY-UNCENSORED?style=social)](https://github.com/ana-joker/AGY-UNCENSORED)
+[![Release](https://img.shields.io/github/v/release/ana-joker/antigravity-uncensored?label=download&color=orange)](https://github.com/ana-joker/antigravity-uncensored/releases)
+[![GitHub stars](https://img.shields.io/github/stars/ana-joker/antigravity-uncensored?style=social)](https://github.com/ana-joker/antigravity-uncensored)
 
 > **Fork of [google-antigravity/antigravity-cli](https://github.com/google-antigravity/antigravity-cli)** — binary analysis and patching toolkit for AGY.EXE.
 >
 > **1,660 exact-match patches · 7 restriction layers neutralized · Zero boot crashes**
 
-A toolkit for analyzing and patching AGY.EXE — removing behavioral restrictions from a Go-based AI agent binary through byte-precision surgery.
+---
+
+## Two Ways to Win
+
+### 🚀 Option A — Download the Pre-Patched Binary
+
+Head to the **[Releases](https://github.com/ana-joker/antigravity-uncensored/releases)** page and grab `antigravity-uncensored-windows-x64.zip`. It contains a fully patched `antigravity.exe` — no Python, no targets.json, no effort. Just unzip and run.
+
+**Zero trust required?** Use Option B instead to patch it yourself.
+
+### 🛠️ Option B — Patch It Yourself (Trusted Computing)
+
+```powershell
+# One command — downloads official binary + patches it automatically:
+python tools/auto_uncensor.py
+
+# Or do it manually:
+python tools/agy_domesticate.py path\to\agy.exe tools\targets.json
+```
+
+The patcher automatically creates a SHA-256 verified backup before making changes. Restore by copying the `.original` backup back.
+
+---
 
 ## Repository Structure
 
 ```
-AGY-UNCENSORED/
+antigravity-uncensored/
 ├── tools/
 │   ├── agy_domesticate.py   # Exact-match binary patcher (CLI)
+│   ├── auto_uncensor.py     # One-click: download official + patch
 │   └── targets.json         # Data-driven patch configuration
 ├── docs/
 │   ├── BINARY_ANATOMY.md        # PE structure, Go runtime, string formats
@@ -30,31 +54,6 @@ AGY-UNCENSORED/
 ├── README.md
 └── .gitignore
 ```
-
-## Requirements
-
-- **Python 3.8+**
-- **AGY.EXE binary** (not included — obtain from Antigravity installation)
-- **~300 MB free RAM** (binary is ~153 MB, loaded into memory for patching)
-- **Windows** (optional — for automated telemetry firewall rule)
-
-## Quick Start
-
-```powershell
-# 1. Locate your agy.exe
-# 2. Place targets.json in same directory (or specify path)
-# 3. Run the patcher:
-python tools/agy_domesticate.py path\to\agy.exe tools\targets.json
-
-# 4. Verify the binary boots:
-path\to\agy.exe --version
-
-# 5. (Optional) Block telemetry at network level:
-netsh advfirewall firewall add rule name="BlockAGYTelemetry" `
-    dir=out action=block program="<full_path_to_agy.exe>"
-```
-
-**The patcher automatically creates a SHA-256 verified backup** at `<binary>.original` before making any changes. To restore, simply copy the backup over the patched file.
 
 ## What Gets Patched
 
@@ -109,13 +108,13 @@ After running, the patcher generates `patch_report.json` containing:
 - Original and new SHA-256 hashes
 - Total patch count
 
-## Disclaimer
-
-This software is provided for **educational and research purposes only**. Modifying software binaries may violate the software's terms of service, license agreements, or applicable laws. The authors assume no liability for misuse. Use at your own risk.
-
 ## Technical Notes
 
 - **pclntab stripped** — function name recovery tools (GoReSym) cannot parse this binary
 - **3 string storage formats** found in .rdata: protobuf, null-bounded docs, null-terminated
 - **Google-internal build** — build version `go1.27-20260615-RC00 cl/932742892` uses Google's changelist system
 - **Confirmed post-patch:** `agy --version` returns `1.0.9`
+
+## Disclaimer
+
+This software is provided for **educational and research purposes only**. Modifying software binaries may violate the software's terms of service, license agreements, or applicable laws. The authors assume no liability for misuse. Use at your own risk.
